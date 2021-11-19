@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1637338268 source:c:\users\ilya\programs\ilya\main.cpp
+1637349621 source:c:\users\ilya\programs\ilya\main.cpp
 	<tchar.h>
 	<windows.h>
 	<string.h>
@@ -9,9 +9,9 @@
 	"save.h"
 	<functional>
 
-1637326007 c:\users\ilya\programs\ilya\save.h
+1637339442 c:\users\ilya\programs\ilya\save.h
 
-1637336325 source:c:\users\ilya\programs\ilya\save.rc
+1637339442 source:c:\users\ilya\programs\ilya\save.rc
 	<windows.h>
 	"save.h"
 

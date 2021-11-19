@@ -113,7 +113,7 @@ long int filesize(FILE*fp){
 struct TextModel{
     char *namefile = NULL; // название файла
     char *valuefile = NULL; // содержимое файла
-    long  sizefile; // длина файла в байтах
+    int  sizefile; // длина файла в байтах
     int   line = 0; // количество строк
     int*  size_line_file = NULL; // длины всех строк
     int* number_file = NULL; // кол во строк
@@ -162,6 +162,7 @@ int PrintString(HDC& hdc,int index,char*str ,int len,WorkModel& workmodel,TextMo
     return index;
 
 }
+
 //void text_metrix(HDC &hdc,TextModel& textmodel, WorkModel&workmodel, SystemModel&sysmodel){
 //    // запасная функция
 //    int sum_ = 0;
@@ -181,36 +182,37 @@ void ReadFile(char *namefile,TextModel* textmodel, WorkModel* workmodel){
         textmodel->namefile[i] = namefile[i];
     }
 
-    FILE* file = fopen(textmodel->namefile,"r");
+    FILE* file = fopen(textmodel->namefile,"r") ;
+    if(file == NULL)exit(1);
     textmodel->sizefile = filesize(file);
     free(textmodel->valuefile);
     textmodel->valuefile = new char[textmodel->sizefile];
     // считывание содержимого файла
-    int i = 0;
+    int siz = 0;
     textmodel->line = 0;
-    while((textmodel->valuefile[i] = fgetc(file)) != EOF){
-        if(textmodel->valuefile[i] == '\n'){
+    while((textmodel->valuefile[siz] = fgetc(file)) != EOF){
+        if(textmodel->valuefile[siz] == '\n'){
             textmodel->line++;
         }
-        i++;
+        siz++;
     }
     free(textmodel->size_line_file);
-    textmodel->size_line_file =  new int[textmodel->line + 1];
+    textmodel->size_line_file =  new int[textmodel->line + 2];
     textmodel->size_line_file[0] = 0;
     int index = 0; // подсчет количества элементов в строке
     int index_line = 1; // номер строки
-    for(int i = 0;i < textmodel->sizefile;i++){
+    for(int i = 0;i < siz;i++){
         index++;
         if(textmodel->valuefile[i] == '\n'){
             textmodel->size_line_file[index_line] = index;
             index_line++;
         }
-
     }
 
+    textmodel->size_line_file[index_line] = siz;
     workmodel->iHscrollMax = index_line;
     textmodel->multiplier = max(1,textmodel->line/40000);
-
+    fclose(file);
 }
 
 
@@ -290,12 +292,11 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 ofn.nMaxFileTitle = 0;
                 ofn.lpstrInitialDir = NULL;
                 ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+                // add Comdlg32.dll
                 if(GetOpenFileName(&ofn) != NULL){
                     ReadFile(ofn.lpstrFile,&textmodel,&workmodel);
                     InvalidateRect(hwnd, NULL, TRUE);
                 };
-                cout << textmodel.multiplier << endl;
-                //free(ofn.lpstrFilter);
 
                 return 0;
             }
@@ -316,24 +317,22 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             char* params_p = (char*)p->lpCreateParams; // название файла
 
             ReadFile(params_p,&textmodel,&workmodel); // чтение файла и инициализация textmodel и workmodel
-            cout << textmodel.multiplier << endl;
             ReleaseDC(hwnd, hdc);
             return 0;
         }
         case WM_PAINT:{
             InvalidateRect(hwnd, NULL, TRUE);
             hdc = BeginPaint(hwnd, &ps);
-            int iPaintBeg = max(0, textmodel.multiplier*(workmodel.iVscrollPos) - 1);
-            int iPaintEnd = min(textmodel.line, (int)(iPaintBeg + ps.rcPaint.bottom/workmodel.cyChar + 1));
+            int iPaintBeg = max(0, textmodel.multiplier*(workmodel.iVscrollPos) - 1) + 1;
+            int iPaintEnd = min(textmodel.line + 1, (int)(iPaintBeg + ps.rcPaint.bottom/workmodel.cyChar + 1));
+            int index = iPaintBeg - 1;
 
             if(workmodel.layout == true){
-                    int index = iPaintBeg;
-                    for(int i = iPaintBeg;i < iPaintEnd;i++){
+                    for(int i = iPaintBeg;i <= iPaintEnd;i++){
                         index = PrintString(hdc,index,textmodel.valuefile + textmodel.size_line_file[i - 1],textmodel.size_line_file[i] - textmodel.size_line_file[i - 1],workmodel,textmodel,true);
                     }
             }else{
-                    int index = iPaintBeg;
-                    for(int i = iPaintBeg;i < iPaintEnd;i++){
+                    for(int i = iPaintBeg;i <= iPaintEnd;i++){
                         index = PrintString(hdc,index,textmodel.valuefile + textmodel.size_line_file[i - 1],textmodel.size_line_file[i] - textmodel.size_line_file[i - 1],workmodel,textmodel,false);
                     }
             }

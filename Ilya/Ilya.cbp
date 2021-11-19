@@ -37,7 +37,9 @@
 			<Add library="user32" />
 			<Add library="kernel32" />
 			<Add library="comctl32" />
+			<Add library="Comdlg32" />
 		</Linker>
+		<Unit filename="all.txt" />
 		<Unit filename="main.cpp" />
 		<Unit filename="save.RC">
 			<Option compilerVar="CPP" />
